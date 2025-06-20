@@ -8,168 +8,151 @@
   [![GitHub stars](https://img.shields.io/github/stars/ChickenWithACrown/nexus-recon?style=social)](https://github.com/ChickenWithACrown/nexus-recon/stargazers)
   [![GitHub forks](https://img.shields.io/github/forks/ChickenWithACrown/nexus-recon?style=social)](https://github.com/ChickenWithACrown/nexus-recon/network/members)
   
-  *A comprehensive security toolkit for penetration testers and security researchers*
+  <em>A comprehensive security toolkit for penetration testers and security researchers</em>
 </div>
 
 ## 🚀 Overview
 
-Nexus Recon is a powerful, all-in-one network reconnaissance and security assessment toolkit designed for cybersecurity professionals and ethical hackers. With its intuitive GUI, Nexus Recon streamlines the process of network scanning, vulnerability assessment, and security auditing.
+Nexus Recon is a powerful, all-in-one network reconnaissance and security assessment toolkit designed for cybersecurity professionals and ethical hackers. It streamlines network scanning, vulnerability assessment, and security auditing with an intuitive GUI.
 
-**Disclaimer**: This tool is intended for security testing and educational purposes only. Use only on systems you own or have explicit permission to test. The developers are not responsible for any misuse or damage caused by this software.
+**Disclaimer**: This tool is intended strictly for security testing and educational purposes. Use only on systems you own or have explicit permission to test. The developers are not responsible for misuse.
 
 ## 🛠️ Features
 
 ### 🔍 Reconnaissance
-- **Port Scanning**: Comprehensive port scanning with service detection
-- **WHOIS Lookup**: Detailed domain and IP registration information
-- **DNS Lookup**: Advanced DNS record analysis and enumeration
-- **Subdomain Enumeration**: Discover subdomains using multiple techniques
-- **IP Geolocation**: Pinpoint physical locations of IP addresses
+- Port scanning with service detection  
+- WHOIS lookup for domain and IP registration data  
+- DNS record analysis and enumeration  
+- Subdomain enumeration using multiple techniques  
+- IP geolocation and mapping  
 
 ### 🔒 Security Testing
-- **Vulnerability Scanning**: Automated detection of common vulnerabilities
-- **SQL Injection Testing**: Advanced SQLi detection with multiple payloads
-- **XSS Testing**: Cross-Site Scripting vulnerability detection
-- **HTTP Headers Analysis**: Security header inspection and recommendations
-- **SSL/TLS Analysis**: Certificate and encryption strength testing
+- Automated vulnerability scanning of common issues  
+- SQL Injection detection with varied payloads  
+- Cross-Site Scripting (XSS) detection  
+- HTTP security headers analysis and recommendations  
+- SSL/TLS certificate and encryption strength testing  
 
 ### 📊 Reporting
-- Detailed scan reports with severity levels
-- Exportable results in multiple formats
-- Visual representation of network topology
-- Vulnerability classification and remediation advice
+- Detailed scan reports with severity levels  
+- Export results in multiple formats  
+- Network topology visualization  
+- Vulnerability classification and remediation guidance  
 
 ## ⚙️ System Requirements
 
-- **OS**: Windows 10/11, Linux, macOS
-- **Python**: 3.8 or higher
-- **RAM**: 4GB minimum (8GB recommended)
-- **Disk Space**: 500MB free space
-- **Network**: Stable internet connection for updates and lookups
+- OS: Windows 10/11, Linux, or macOS  
+- Python: 3.8 or higher  
+- RAM: 4GB minimum (8GB recommended)  
+- Disk Space: ~500MB free  
+- Internet: Required for updates and external lookups  
 
-## 📦 Dependencies
+## 📦 Installation
 
-Core dependencies are listed in `requirements.txt`. Install them using:
-
-## 🚀 Installation
-
-### Method 1: From Source (Recommended for Developers)
+### From Source (Recommended)
 ```bash
-# Clone the repository
 git clone https://github.com/ChickenWithACrown/nexus-recon.git
 cd nexus-recon
-
-# Create and activate virtual environment (recommended)
+```
+# Create and activate a virtual environment (recommended)
+# Windows
+```
 python -m venv venv
-.\venv\Scripts\activate  # Windows
-source venv/bin/activate  # Linux/Mac
+.\venv\Scripts\activate
+```
+# Linux/Mac
+```
+source venv/bin/activate
+```
 
 # Install dependencies
+```
 pip install -r requirements.txt
 ```
-
-### Method 2: Using pip (Coming Soon)
-```bash
+### Using pip (Coming Soon)
+```
 pip install nexus-recon
 ```
-
-### Method 3: Standalone Executable (Coming Soon)
+### Standalone Executable (Coming Soon)
 Download the latest release from the [Releases](https://github.com/ChickenWithACrown/nexus-recon/releases) page.
 
 ## 🖥️ Usage
 
-### Starting the Application
-Simply double-click on `NexusRecon.exe` to launch the application. The GUI will guide you through all available features.
+### Launching the Application
 
-### GUI Features
-- **Target Input**: Enter the target IP, domain, or URL
-- **Scan Selection**: Choose from various scan types
-- **Results Panel**: View scan results in real-time
-- **Export Options**: Save your scan results
-- **Settings**: Configure application preferences
+- **Executable:** Double-click `NexusRecon.exe` to start the GUI.  
+- **From Source:**  
+  ```bash
+  python netrecon.py
 
-### System Tray
-NexusRecon runs in the system tray when minimized, allowing you to quickly access it without cluttering your taskbar.
+### Main GUI Features
+- Target input: IP, domain, or URL  
+- Scan selection: choose scan types  
+- Results panel: real-time scan output  
+- Export options: save reports  
+- Settings: configure preferences  
 
-### Installation Methods
-
-#### Method 1: Using the Executable (Recommended)
-1. Download the latest release from the [Releases](https://github.com/ChickenWithACrown/nexus-recon/releases) page
-2. Extract the downloaded ZIP file
-3. Double-click on `NexusRecon.exe` to launch the application
-
-#### Method 2: From Source
-```bash
-# Clone the repository
-git clone https://github.com/ChickenWithACrown/nexus-recon.git
-cd nexus-recon
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run the application
-python netrecon.py
-```
+### System Tray Support
+Nexus Recon runs in the system tray when minimized, enabling quick access without cluttering your taskbar.
 
 ## 📸 Screenshots
 
-### Dashboard View 1
-![Dashboard View 1](docs/images/Dashbaord%20View%201.png)
+### Dashboard View 1  
+![Dashboard View 1](docs/images/Dashbaord%20View%201.png)  
 
-### Dashboard View 2
-![Dashboard View 2](docs/images/Dashbaord%20View%202.png)
+### Dashboard View 2  
+![Dashboard View 2](docs/images/Dashbaord%20View%202.png)  
 
-### Help Section
-![Help](docs/images/Help.png)
+### Help Section  
+![Help](docs/images/Help.png)  
 
-### Scan Results
-![Results](docs/images/Results.png)
+### Scan Results  
+![Results](docs/images/Results.png)  
 
-### Settings Panel
-![Settings](docs/images/Settings.png)
+### Settings Panel  
+![Settings](docs/images/Settings.png)  
 
 ## 💖 Support My Work
 
-If you find this project useful and would like to support its development, please consider checking out my support page:
+If you find this project useful, please consider supporting its development:
 
 🔗 [Support Me](https://crown.great-site.net/)
 
-Your support helps me continue to develop and maintain this project and create more open-source tools.
+Your support helps keep this and future open-source projects alive.
 
 ## 🤝 Contributing
 
-We welcome contributions from the community! Before contributing, please read our [Contributing Guidelines](CONTRIBUTING.md).
+We welcome community contributions! Please review our [Contributing Guidelines](CONTRIBUTING.md) first.
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+1. Fork the repository  
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)  
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)  
+4. Push the branch (`git push origin feature/AmazingFeature`)  
+5. Open a Pull Request  
 
 ## 📜 License
 
-Distributed under the MIT License. See `LICENSE` for more information.
+This project is licensed under the MIT License. See the `LICENSE` file for details.
 
 ## 👥 Community & Support
 
-- **Discord**: Join our [Discord Server](https://discord.gg/2ZuJDpDtsx) for support and discussions
-- **GitHub Issues**: [Report Issues & Feature Requests](https://github.com/ChickenWithACrown/nexus-recon/issues)
-- **Contribute**: Check out our [Contributing Guide](CONTRIBUTING.md)
-
-For security-related issues, please see our [Security Policy](SECURITY.md).
+- **Discord:** Join our [Discord Server](https://discord.gg/2ZuJDpDtsx)  
+- **Issues:** Report bugs or request features on [GitHub Issues](https://github.com/ChickenWithACrown/nexus-recon/issues)  
+- **Contributing:** Check out our [Contributing Guide](CONTRIBUTING.md)  
+- **Security:** For security-related concerns, see [Security Policy](SECURITY.md)  
 
 ## 🙏 Acknowledgments
 
-- Thanks to all contributors who have helped improve Nexus Recon
-- Inspired by various open-source security tools
-- Built with ❤️ by the cybersecurity community
+- Thanks to all contributors who improve Nexus Recon  
+- Inspired by many open-source security tools  
+- Built with ❤️ by the cybersecurity community  
 
 ## ⚠️ Legal Notice
 
-**Nexus Recon** is intended for **legal security testing and educational purposes only**. The developers and contributors are not responsible for any misuse or damage caused by this program. By using this software, you agree to the following:
+**Nexus Recon** is intended for legal security testing and educational purposes only. By using this software you agree to:
 
-- You will only test systems you own or have explicit permission to test
-- You will comply with all applicable laws and regulations
-- You take full responsibility for your actions
+- Only test systems you own or have explicit permission to test  
+- Comply with applicable laws and regulations  
+- Take full responsibility for your actions  
 
-Always ensure you have proper authorization before performing any security testing.
+Always obtain proper authorization before conducting security assessments.
