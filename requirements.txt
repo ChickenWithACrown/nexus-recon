@@ -1,9 +1,15 @@
-requests>=2.25.1
-python-whois>=0.9.3
-dnspython>=2.3.0
-ipaddress>=1.0.23
-beautifulsoup4>=4.9.3
-cryptography>=3.4.7
+# Core Dependencies
+PyQt5>=5.15.0
+
+# Network & Security
+requests>=2.25.0
+python-whois>=0.8.0
+dnspython>=2.1.0
+beautifulsoup4>=4.9.0
+cryptography>=3.4.0
 geoip2>=4.1.0
 python-nmap>=0.7.1
 colorama>=0.4.4
+
+# Optional Dependencies
+# pyinstaller>=4.5.0  # Only required for building the executable

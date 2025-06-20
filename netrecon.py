@@ -3496,18 +3496,24 @@ class HackerGUI:
             messagebox.showerror("Error", f"Failed to save file: {str(e)}")
             self.log(f"[-] Error exporting results: {str(e)}", "red")
 
-# Main GUI execution block
-
-if __name__ == '__main__':
+def main():
+    """Main entry point for the NexusRecon application."""
     try:
         # Initialize and run the GUI application
         root = tk.Tk()
         app = HackerGUI(root)
         root.mainloop()
+        return 0
     except Exception as e:
         logging.critical("Error in GUI application", exc_info=True)
-        messagebox.showerror("Fatal Error", 
-            f"A fatal error occurred in the application.\\n\\n"
-            f"Error: {str(e)}\\n\\n"
-            "Please check error.log for more details.")
-        sys.exit(1)
+        messagebox.showerror(
+            "Fatal Error",
+            f"A fatal error occurred in the application.\n\n"
+            f"Error: {str(e)}\n\n"
+            "Please check error.log for more details."
+        )
+        return 1
+
+# Main GUI execution block
+if __name__ == '__main__':
+    sys.exit(main())

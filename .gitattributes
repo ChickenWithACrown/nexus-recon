@@ -1,0 +1,59 @@
+# Auto detect text files and perform LF normalization
+* text=auto eol=lf
+
+# Force Windows-style line endings for Windows-specific files
+*.bat eol=crlf
+*.cmd eol=crlf
+*.ps1 eol=crlf
+
+# Force Unix-style line endings for shell scripts
+*.sh eol=lf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.exe binary
+*.dll binary
+*.pyd binary
+*.so binary
+*.dylib binary
+*.a binary
+*.o binary
+*.obj binary
+
+# Python files
+*.py text diff=python
+
+# Documentation
+*.md text
+*.txt text
+*.rst text
+*.json text
+*.yaml text
+*.yml text
+*.toml text
+*.ini text
+*.cfg text
+*.conf text
+
+# Source files
+*.c text
+*.cpp text
+*.h text
+*.hpp text
+*.java text
+*.cs text
+*.js text
+*.ts text
+*.css text
+*.scss text
+*.sass text
+*.less text
+*.html text
+*.xml text
+*.svg text

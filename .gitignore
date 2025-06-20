@@ -18,6 +18,12 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+*.spec
+
+# Build and release files
+NexusRecon-*
+NexusRecon.spec
+build_release.py
 
 # Virtual Environment
 venv/
@@ -41,10 +47,13 @@ Thumbs.db
 
 # Logs
 *.log
+error.log
 
 # Local configuration
 .env
-*.ini
+.env.*
+!.gitignore
+!*.ini
 
 # Database
 *.db
