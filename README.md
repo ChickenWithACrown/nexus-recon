@@ -113,16 +113,20 @@ python netrecon.py
 
 ## 📸 Screenshots
 
-### Dashboard
-![Dashboard](https://via.placeholder.com/800x500/1a1a1a/00ff00?text=Dashboard+View)
+### Dashboard View 1
+![Dashboard View 1](docs/images/Dashbaord%20View%201.png)
 
-### Port Scan Results
-![Port Scan](https://via.placeholder.com/800x500/1a1a1a/00ff00?text=Port+Scan+Results)
+### Dashboard View 2
+![Dashboard View 2](docs/images/Dashbaord%20View%202.png)
 
-### Vulnerability Report
-![Vulnerability Report](https://via.placeholder.com/800x500/1a1a1a/00ff00?text=Vulnerability+Report)
+### Help Section
+![Help](docs/images/Help.png)
 
-*Note: Replace placeholder images with actual screenshots of your application*
+### Scan Results
+![Results](docs/images/Results.png)
+
+### Settings Panel
+![Settings](docs/images/Settings.png)
 
 ## 🤝 Contributing
 
