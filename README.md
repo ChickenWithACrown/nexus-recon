@@ -128,6 +128,14 @@ python netrecon.py
 ### Settings Panel
 ![Settings](docs/images/Settings.png)
 
+## 💖 Support My Work
+
+If you find this project useful and would like to support its development, please consider checking out my support page:
+
+🔗 [Support Me](https://crown.great-site.net/)
+
+Your support helps me continue to develop and maintain this project and create more open-source tools.
+
 ## 🤝 Contributing
 
 We welcome contributions from the community! Before contributing, please read our [Contributing Guidelines](CONTRIBUTING.md).
