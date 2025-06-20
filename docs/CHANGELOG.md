@@ -7,11 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-- Initial public release
-- Core network scanning functionality
-- GUI interface for easy interaction
-- Multiple scan types (Port, WHOIS, DNS, etc.)
-- Security testing capabilities
+- Support for additional network protocols
+- More comprehensive documentation
+
+## [2.2.1] - 2025-06-20
+### Added
+- Standalone executable release for Windows
+- Source code zip distribution
+- Improved release automation
+
+### Fixed
+- Minor UI improvements
+- Updated dependencies
 
 ## [2.2.0] - 2025-06-19
 ### Added

@@ -70,7 +70,7 @@ For information about the security features in Nexus Recon, please refer to our 
 
 ## Contact
 
-For any security-related questions or concerns, please contact us at `security@example.com`.
+For any security-related questions or concerns, please contact us at [discord](https://discord.gg/2ZuJDpDtsx).
 
 ---
 

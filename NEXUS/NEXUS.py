@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Version information
-VERSION = "2.2" # Updated version to reflect changes for WHOIS error handling
+VERSION = "2.2.1" # Updated version with release improvements
 
 import argparse
 import csv
