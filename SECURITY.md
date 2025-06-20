@@ -11,12 +11,11 @@
 
 **Please report security vulnerabilities responsibly.**
 
-If you believe you've found a security vulnerability in Nexus Recon, please report it through one of these channels:
-
-1. **GitHub Issues**: Open a new issue at [GitHub Issues](https://github.com/ChickenWithACrown/nexus-recon/issues/new/choose) and use the "Security Vulnerability" template
-2. **Discord**: Contact `ChickenWithACrown` directly on Discord
+If you believe you've found a security vulnerability in Nexus Recon, please report it through our [Discord Server](https://discord.gg/2ZuJDpDtsx) by messaging the moderators or posting in the #security channel.
 
 Please do not disclose security-related issues publicly until they have been addressed.
+
+Our security team will acknowledge your report within 48 hours and work with you to resolve the issue.
 
 ### When to report a vulnerability?
 

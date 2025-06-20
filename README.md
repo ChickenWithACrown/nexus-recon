@@ -78,38 +78,37 @@ Download the latest release from the [Releases](https://github.com/ChickenWithAC
 
 ## 🖥️ Usage
 
-### Basic Usage
+### Starting the Application
+Simply double-click on `NexusRecon.exe` to launch the application. The GUI will guide you through all available features.
+
+### GUI Features
+- **Target Input**: Enter the target IP, domain, or URL
+- **Scan Selection**: Choose from various scan types
+- **Results Panel**: View scan results in real-time
+- **Export Options**: Save your scan results
+- **Settings**: Configure application preferences
+
+### System Tray
+NexusRecon runs in the system tray when minimized, allowing you to quickly access it without cluttering your taskbar.
+
+### Installation Methods
+
+#### Method 1: Using the Executable (Recommended)
+1. Download the latest release from the [Releases](https://github.com/ChickenWithACrown/nexus-recon/releases) page
+2. Extract the downloaded ZIP file
+3. Double-click on `NexusRecon.exe` to launch the application
+
+#### Method 2: From Source
 ```bash
-# Start the application
+# Clone the repository
+git clone https://github.com/ChickenWithACrown/nexus-recon.git
+cd nexus-recon
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the application
 python netrecon.py
-```
-
-### Command Line Arguments
-```bash
-usage: netrecon.py [-h] [--target TARGET] [--scan-type {port,dns,whois,http,subdomain}]
-                  [--output OUTPUT] [--threads THREADS] [--verbose] [--version]
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --target TARGET       Target IP, domain, or URL to scan
-  --scan-type {port,dns,whois,http,subdomain}
-                        Type of scan to perform
-  --output OUTPUT       Output file for scan results
-  --threads THREADS     Number of threads to use (default: 10)
-  --verbose             Enable verbose output
-  --version             Show version and exit
-```
-
-### Example Scans
-```bash
-# Basic port scan
-python netrecon.py --target example.com --scan-type port
-
-# Subdomain enumeration
-python netrecon.py --target example.com --scan-type subdomain
-
-# Full vulnerability assessment
-python netrecon.py --target example.com --scan-type vuln --output report.html
 ```
 
 ## 📸 Screenshots
@@ -141,7 +140,7 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 ## 👥 Community & Support
 
-- **Discord**: Contact `ChickenWithACrown` directly for support
+- **Discord**: Join our [Discord Server](https://discord.gg/2ZuJDpDtsx) for support and discussions
 - **GitHub Issues**: [Report Issues & Feature Requests](https://github.com/ChickenWithACrown/nexus-recon/issues)
 - **Contribute**: Check out our [Contributing Guide](CONTRIBUTING.md)
 

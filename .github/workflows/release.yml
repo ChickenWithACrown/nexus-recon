@@ -27,21 +27,43 @@ jobs:
         pip install -r requirements.txt
         pip install pyinstaller
     
+    - name: Install 7-Zip
+      uses: mstoefer/setup-7zip@v1
+      
     - name: Build executable
       run: |
         # Create a version file
         echo "__version__ = '${{ github.ref_name }}'" > version.py
         
-        # Build the executable
-        pyinstaller --onefile --name NexusRecon --noconsole netrecon.py
+        # Install PyInstaller if not already installed
+        pip install pyinstaller
         
-        # Create a zip file with the executable and necessary files
-        7z a NexusRecon-${{ github.ref_name }}-windows-x64.zip \
+        # Build the executable with GUI and no console
+        pyinstaller --onefile \
+          --name NexusRecon \
+          --noconsole \
+          --icon=NONE \
+          --add-data "README.md;." \
+          --add-data "LICENSE;." \
+          netrecon.py
+        
+        # Create a zip file with the executable and documentation
+        7z a NexusRecon-${{ github.ref_name }}-Windows-x64.zip \
           dist/NexusRecon.exe \
-          netrecon.py \
+          README.md \
+          LICENSE
+          
+        # Create a separate zip with source code for developers
+        7z a NexusRecon-${{ github.ref_name }}-Source.zip \
+          *.py \
+          requirements.txt \
           README.md \
           LICENSE \
-          requirements.txt
+          .github/
+          
+        # Create release directory and move files
+        mkdir -p release
+        move NexusRecon-*.zip release/
     
     - name: Create Release
       id: create_release
@@ -50,39 +72,46 @@ jobs:
         name: NexusRecon ${{ github.ref_name }}
         tag_name: ${{ github.ref_name }}
         body: |
-          ## What's Changed
+          ## NexusRecon ${{ github.ref_name }}
           
-          ### New Features
-          - Initial release of NexusRecon
+          ### What's New
+          - Initial release of NexusRecon - A powerful GUI-based network reconnaissance tool
           
-          ### Bug Fixes
-          - Various bug fixes and improvements
-          
-          ### Dependencies
-          - Updated dependencies to latest versions
+          ### Key Features
+          - User-friendly graphical interface
+          - Comprehensive network scanning capabilities
+          - Real-time results visualization
+          - System tray integration
           
           ## Installation
           
-          ### Windows Executable
-          1. Download `NexusRecon-${{ github.ref_name }}-windows-x64.zip`
+          ### Method 1: Windows Executable (Recommended)
+          1. Download `NexusRecon-${{ github.ref_name }}-Windows-x64.zip`
           2. Extract the zip file
-          3. Run `NexusRecon.exe`
+          3. Double-click `NexusRecon.exe` to launch the application
           
-          ### Python Script
+          ### Method 2: From Source
           ```bash
+          # Clone the repository
+          git clone https://github.com/ChickenWithACrown/nexus-recon.git
+          cd nexus-recon
+          
           # Install requirements
           pip install -r requirements.txt
           
-          # Run the script
+          # Run the application
           python netrecon.py
           ```
           
-          ## Documentation
+          ## Getting Help
+          - Join our [Discord Server](https://discord.gg/2ZuJDpDtsx) for support and discussions
+          - Check the [Documentation](https://github.com/ChickenWithACrown/nexus-recon#readme) for usage instructions
+          - Report issues on [GitHub Issues](https://github.com/ChickenWithACrown/nexus-recon/issues)
           
-          See [README.md](https://github.com/ChickenWithACrown/nexus-recon#readme) for detailed usage instructions.
+          ## License
+          This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
         draft: false
         prerelease: false
         files: |
-          NexusRecon-${{ github.ref_name }}-windows-x64.zip
-          dist/NexusRecon.exe
-          netrecon.py
+          release/NexusRecon-${{ github.ref_name }}-Windows-x64.zip
+          release/NexusRecon-${{ github.ref_name }}-Source.zip
