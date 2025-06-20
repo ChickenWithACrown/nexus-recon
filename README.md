@@ -21,7 +21,7 @@ Nexus Recon is a powerful, all-in-one network reconnaissance and security assess
 
 ### 🔍 Reconnaissance
 - Port scanning with service detection  
-- WHOIS lookup for domain and IP registration data  
+- WHOIS lookup for domain and IP registration data  (under way)
 - DNS record analysis and enumeration  
 - Subdomain enumeration using multiple techniques  
 - IP geolocation and mapping  
