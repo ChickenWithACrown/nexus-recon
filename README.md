@@ -147,6 +147,9 @@ This project is licensed under the MIT License. See the `LICENSE` file for detai
 - Inspired by many open-source security tools  
 - Built with ❤️ by the cybersecurity community  
 
+## 🔗 Supported Discord Servers
+- RightGear Official Server -- https://discord.gg/YNwVVqnSN4
+
 ## ⚠️ Legal Notice
 
 **Nexus Recon** is intended for legal security testing and educational purposes only. By using this software you agree to:
