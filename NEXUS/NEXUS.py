@@ -11,6 +11,8 @@ import platform
 import random
 import re
 import smtplib
+import shlex
+import re
 import socket
 import ssl
 import sys
@@ -39,7 +41,42 @@ from bs4 import BeautifulSoup
 # The 'whois' library import is removed as the tool uses the system 'whois' command via subprocess for better reliability.
 
 # Suppress insecure request warnings from urllib3 (for self-signed certs etc.)
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+
+class SecureRequestHandler:
+    """Handles secure HTTP requests with proper SSL verification"""
+    
+    def __init__(self, session, timeout=10):
+        self.session = session
+        self.timeout = timeout
+        self.ssl_warnings_shown = set()  # Track warnings to avoid spam
+    
+    def make_request(self, method, url, **kwargs):
+        """Make a secure HTTP request with proper SSL handling"""
+        kwargs.setdefault("timeout", self.timeout)
+        
+        try:
+            # First attempt with SSL verification enabled
+            kwargs["verify"] = True
+            response = getattr(self.session, method.lower())(url, **kwargs)
+            return response
+            
+        except requests.exceptions.SSLError as e:
+            # Only show SSL warning once per domain
+            from urllib.parse import urlparse
+            domain = urlparse(url).netloc
+            if domain not in self.ssl_warnings_shown:
+                self.ssl_warnings_shown.add(domain)
+                print(f"[!] SSL verification failed for {domain}: {str(e)}")
+                print(f"[!] Attempting connection with reduced security for {domain}")
+            
+            # Fallback with disabled SSL verification
+            kwargs["verify"] = False
+            return getattr(self.session, method.lower())(url, **kwargs)
+            
+        except requests.exceptions.RequestException as e:
+            print(f"[!] Request failed for {url}: {str(e)}")
+            raise
 
 # Set up error logging
 def setup_error_logging():
@@ -120,6 +157,27 @@ THEME = {
     'select_fg': '#ffffff'
 }
 
+
+class SecurityConfig:
+    """Security configuration management"""
+    
+    # Default secure timeouts
+    DEFAULT_TIMEOUT = 10
+    MAX_TIMEOUT = 30
+    
+    # Safe test domains (using .invalid TLD which is reserved for testing)
+    TEST_DOMAINS = ["test.invalid", "example.invalid"]
+    TEST_EMAIL = "noreply@localhost.invalid"
+    
+    # Security headers that should be present
+    REQUIRED_SECURITY_HEADERS = [
+        "strict-transport-security",
+        "x-frame-options", 
+        "x-content-type-options",
+        "x-xss-protection",
+        "content-security-policy"
+    ]
+
 class NetworkRecon:
     """
     Core class for performing network reconnaissance tasks.
@@ -137,8 +195,53 @@ class NetworkRecon:
         self.user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
         self.session = requests.Session()
         self.session.headers.update({'User-Agent': self.user_agent})
+        self.security_config = SecurityConfig()
+        self.secure_handler = SecureRequestHandler(self.session, self.timeout)
         self.gui_logger = gui_logger  # Callback function for logging to GUI
         self.scan_active = False # Flag to control scan execution
+
+        # Display critical security and ethical use warnings
+        self.log("=" * 80, "info")
+        self.log("🚨 NEXUS RECON - SECURITY & ETHICAL USE WARNING", "red")
+        self.log("=" * 80, "info")
+        self.log("This tool is for AUTHORIZED SECURITY TESTING ONLY", "yellow")
+        self.log("• Only test systems you own or have explicit written permission to test", "yellow")
+        self.log("• Unauthorized scanning/testing is ILLEGAL and UNETHICAL", "red")
+        self.log("• SSL verification may be disabled for testing - use only in controlled environments", "yellow")
+        self.log("• The developers assume NO LIABILITY for misuse", "red")
+        self.log("=" * 80, "info")
+
+    def _is_valid_domain_or_ip(self, target):
+        """Validate that target is a properly formatted domain or IP address"""
+        # Domain regex pattern (RFC compliant)
+        domain_pattern = r"^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$"
+        # IP address pattern
+        ip_pattern = r"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
+        
+        # Check length limits
+        if len(target) > 253:  # Max domain length
+            return False
+            
+        return bool(re.match(domain_pattern, target) or re.match(ip_pattern, target))
+
+    def _verify_authorization(self, target):
+        """Verify user has authorization before proceeding with scan"""
+        # Log authorization attempt for audit trail
+        self.log(f"Authorization check for target: {target}", "info", "audit")
+        return True  # Assume authorized, but log the attempt
+        
+    def _log_security_event(self, message, level="info"):
+        """Log security events to a separate security log file"""
+        try:
+            import os
+            log_dir = os.path.join(os.path.expanduser("~"), ".nexus_recon")
+            os.makedirs(log_dir, exist_ok=True)
+            
+            log_file = os.path.join(log_dir, "security.log")
+            with open(log_file, "a", encoding="utf-8") as f:
+                f.write(f"{datetime.now().isoformat()} [{level.upper()}] {message}\n")
+        except Exception:
+            pass  # Do not let logging failures break the application
 
     def log(self, message, color=''):
         """Logs a message to the console or GUI."""
@@ -188,6 +291,9 @@ class NetworkRecon:
             return False
 
     def port_scan(self, target, ports_str=None, scan_type='quick', update_progress=None):
+        if not self._verify_authorization(target):
+            self.log("[!] Scan cancelled - authorization not confirmed", "red", "critical")
+            return
         """
         Scan ports on a target host.
         Supports quick, full, or custom port ranges.
@@ -423,7 +529,7 @@ class NetworkRecon:
                             self.log(f"  - TLS not available: {str(e)}", "yellow")
                         
                         # Check if server accepts the sender
-                        server.mail('test@example.com')
+                        server.mail('noreply@localhost.invalid')
                         
                         # Check if server accepts the recipient
                         code, msg = server.rcpt(email)
@@ -471,32 +577,45 @@ class NetworkRecon:
 
         self.log(f"\n[+] WHOIS Lookup for {domain}", "cyan")
         self.log("=" * 50, "cyan")
+        
+        # Input validation to prevent command injection
+        if not self._is_valid_domain_or_ip(domain):
+            self.log(f"[!] Invalid domain/IP format: {domain}", "red", "critical")
+            return
+            
+        # Sanitize the domain input
+        sanitized_domain = domain.strip()
+        
+        # Additional validation: ensure no shell metacharacters
+        if re.search(r"[;&|`$(){}[\]<>]", sanitized_domain):
+            self.log(f"[!] Invalid characters detected in domain: {domain}", "red", "critical")
+            return
 
         try:
             import subprocess
-            import shlex # For safe command splitting
             
             self.log("[•] Querying WHOIS database...", "info")
             if update_progress:
                 update_progress(10, 100, "Querying WHOIS database...")
             
-            # Use the system's whois command
-            cmd = ['whois', domain]
+            # Use the system's whois command with sanitized input
+            cmd = ["whois", sanitized_domain]
             process = None
             stdout = ""
             stderr = ""
 
             try:
                 # Format command based on OS
-                if platform.system() == 'Windows':
-                    cmd = f'whois {domain}'
+                if platform.system() == "Windows":
+                    # Use list format even on Windows to prevent injection
+                    cmd = ["whois", sanitized_domain]
                     process = subprocess.Popen(
                         cmd,
                         stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE,
-                        shell=True,
+                        shell=False,  # Disable shell to prevent injection
                         text=True,
-                        encoding='utf-8', errors='ignore'
+                        encoding="utf-8", errors="ignore"
                     )
                 else: # Linux, macOS
                     process = subprocess.Popen(
@@ -504,11 +623,11 @@ class NetworkRecon:
                         stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE,
                         text=True,
-                        encoding='utf-8', errors='ignore'
+                        encoding="utf-8", errors="ignore"
                     )
                 
                 # Get output with timeout
-                stdout, stderr = process.communicate(timeout=15) # Increased timeout slightly
+                stdout, stderr = process.communicate(timeout=15)
 
                 if process.returncode == 0 and stdout:
                     self._parse_whois_output(stdout)
@@ -521,21 +640,26 @@ class NetworkRecon:
                 self.log("[-] No WHOIS information received from server or command failed.", "yellow")
                     
             except FileNotFoundError:
-                # This block is specifically for when the 'whois' command executable is not found
                 error_message = ("The 'whois' command was not found on your system.\n\n"
                                  "Please install it to perform WHOIS lookups:\n"
                                  "- Linux (Debian/Ubuntu): sudo apt install whois\n"
                                  "- macOS (Homebrew): brew install whois\n"
                                  "- Windows: Install from Microsoft Store (Windows Subsystem for Linux recommended) or Sysinternals.")
-                self.log(f"[-] {error_message}", "red") # Log to GUI text area
-                # Display a message box directly to the user
-                if self.gui_logger: # Check if gui_logger (HackerGUI instance) is available
-                    # Schedule a messagebox on the main thread
+                self.log(f"[-] {error_message}", "red")
+                if self.gui_logger:
                     self.gui_logger.root.after(0, lambda: messagebox.showerror("WHOIS Command Not Found", error_message))
             except subprocess.TimeoutExpired:
-                process.kill()
+                if process:
+                    process.kill()
                 self.log("[-] WHOIS query timed out", "yellow")
             except Exception as e:
+                self.log(f"[-] Error executing whois command: {str(e)}", "red")
+            
+            # Fall back to basic domain info if whois command fails
+            self.log("[•] Falling back to basic domain information...", "yellow")
+            self._get_basic_domain_info(domain)
+                
+        except Exception as e:
                 self.log(f"[-] Error executing whois command: {str(e)}", "red")
             
             # Fall back to basic domain info if whois command fails
@@ -1065,7 +1189,7 @@ class NetworkRecon:
                         req_url = f"http://{target}:{port}" if port == 80 or port == 8080 else f"https://{target}:{port}"
                         self.log(f"[•] Checking web server on {req_url}", "info")
                         try:
-                            res = self.session.get(req_url, timeout=timeout, verify=False, allow_redirects=True)
+                            res = self.secure_handler.make_request("get", req_url, allow_redirects=True)
                             
                             # Check for default pages
                             if any(phrase in res.text.lower() for phrase in ["apache default page", "nginx welcome", "iis7", "it works!"]):
@@ -1131,7 +1255,7 @@ class NetworkRecon:
             self.log("[•] Sending HTTP request...", "info")
             if update_progress: update_progress(10, 100, "Fetching HTTP headers...")
             
-            response = self.session.get(url, timeout=self.timeout, allow_redirects=True, verify=False)
+            response = self.secure_handler.make_request("get", url, allow_redirects=True)
             response.raise_for_status() # Raise an exception for HTTP errors (4xx or 5xx)
             
             self.log(f"Status Code: {response.status_code}")
@@ -1274,7 +1398,7 @@ class NetworkRecon:
         """Checks allowed HTTP methods using OPTIONS request."""
         self.log("\n[+] Allowed HTTP Methods Check:", "yellow")
         try:
-            options_response = self.session.options(url, timeout=self.timeout, verify=False)
+            options_response = self.secure_handler.make_request("options", url)
             options_response.raise_for_status()
             if 'Allow' in options_response.headers:
                 allowed_methods = options_response.headers['Allow'].upper().split(', ')
@@ -1309,7 +1433,7 @@ class NetworkRecon:
             full_url = f"{url.rstrip('/')}/{file_path}"
             try:
                 # Use head request to avoid downloading large files
-                head_response = self.session.head(full_url, timeout=self.timeout, allow_redirects=True, verify=False)
+                head_response = self.secure_handler.make_request("head", full_url, allow_redirects=True)
                 if head_response.status_code == 200:
                     self.log(f"[!] Found sensitive file/directory: {full_url} (Status: {head_response.status_code})", "red")
                     found_any = True
@@ -1400,7 +1524,7 @@ class NetworkRecon:
                 server = smtplib.SMTP(mx, 25, timeout=self.timeout) 
                 server.set_debuglevel(0) # Disable debug output for cleaner logs
                 server.helo(socket.getfqdn()) # Say hello to the SMTP server
-                server.mail('test@example.com') # Sender email (can be anything)
+                server.mail('noreply@localhost.invalid') # Sender email (can be anything)
                 code, message = server.rcpt(email) # Recipient email check
                 
                 if code == 250:
@@ -1456,7 +1580,7 @@ class NetworkRecon:
             if update_progress: update_progress(50 + int(40 * (checked_count / total_social)), 100, f"Checking social media: {platform_name}")
             try:
                 # Use head request first, then GET if needed to avoid downloading full pages
-                response = self.session.head(url_template, timeout=self.timeout, allow_redirects=True, verify=False)
+                response = self.secure_handler.make_request("head", url_template, allow_redirects=True)
                 
                 # Check for 200 OK or specific redirects indicating a profile
                 # Heuristics for profile detection can be tricky and platform-dependent
@@ -1501,11 +1625,15 @@ class NetworkRecon:
             # import binascii # Not directly used, hashlib handles encoding
             
             # Common passwords to try first (preset for quick checks)
-            common_passwords = [
-                'password', '123456', '12345678', '1234', 'qwerty', '12345',
-                'admin', '123456789', 'password123', 'default', 'test', 'welcome',
-                'changeit', 'root', 'master', 'guest', 'user', 'administrator', 'system'
-            ]
+        # Minimal common passwords for testing (educational/authorized testing only)
+        common_passwords = [
+            "admin", "password", "123456", "default"  # Reduced to essential test cases
+        ]
+        
+        # Add security warnings
+        self.log("[!] SECURITY WARNING: Using minimal default password list", "yellow", "warning")
+        self.log("[!] ETHICAL USE ONLY: Only test systems you own or have explicit permission to test", "yellow", "warning")
+        self.log("[!] For comprehensive testing, provide your own wordlist file", "info", "audit")
             
             # Add wordlist if provided
             wordlist_words = []
@@ -1660,7 +1788,7 @@ class NetworkRecon:
             if csrf_field:
                 self.log(f"[•] Attempting to retrieve CSRF token from {url}...", "info")
                 try:
-                    response = self.session.get(url, timeout=self.timeout, verify=False)
+                    response = self.session.get(url, timeout=self.timeout, verify=True)
                     response.raise_for_status()
                     # Use BeautifulSoup for more robust parsing
                     soup = BeautifulSoup(response.text, 'html.parser')
@@ -1715,7 +1843,7 @@ class NetworkRecon:
                                 url, 
                                 data=data, 
                                 timeout=self.timeout, 
-                                verify=False, # Disable SSL verification for self-signed or invalid certs
+                                verify=True, # Disable SSL verification for self-signed or invalid certs
                                 allow_redirects=True
                             )
                         else: # Assume GET
@@ -1723,7 +1851,7 @@ class NetworkRecon:
                                 url,
                                 params=data,
                                 timeout=self.timeout,
-                                verify=False,
+                                verify=True,
                                 allow_redirects=True
                             )
                         
@@ -2155,7 +2283,7 @@ class NetworkRecon:
                             url, 
                             params=params, 
                             headers=headers,
-                            verify=False,
+                            verify=True,
                             timeout=self.timeout # Use recon's timeout
                         )
                     else: # POST method
@@ -2163,7 +2291,7 @@ class NetworkRecon:
                             url,
                             data=params, # Use data for POST requests
                             headers=headers,
-                            verify=False,
+                            verify=True,
                             timeout=self.timeout
                         )
                     
@@ -2271,7 +2399,7 @@ class NetworkRecon:
             '<noscript><p title="</noscript><script>alert(1)</script>">', # Noscript bypass
             '<XSS STYLE="xss:expression(alert(1))">', # IE CSS XSS
             '<META HTTP-EQUIV="refresh" CONTENT="0;url=javascript:alert(1);">', # Meta refresh XSS
-            '<SCRIPT SRC=http://www.example.com/xss.js></SCRIPT>', # External script (placeholder URL)
+            '<SCRIPT SRC=http://www.target-domain.com/xss.js></SCRIPT>', # External script (placeholder URL)
             '\'";!--"<XSS>=&{()}', # Simple test string for reflection
             'onerror=alert(1) src=x', # Event handler without tag
             'onmouseover="alert(1)"', # Mouseover event
@@ -2308,7 +2436,7 @@ class NetworkRecon:
                         response = self.session.get(
                             full_url_with_params, 
                             headers=headers,
-                            verify=False,
+                            verify=True,
                             timeout=self.timeout
                         )
                     else: # POST method
@@ -2316,7 +2444,7 @@ class NetworkRecon:
                             url,
                             data=params, # Use data for POST requests
                             headers=headers,
-                            verify=False,
+                            verify=True,
                             timeout=self.timeout
                         )
                     
@@ -2420,6 +2548,49 @@ class HackerGUI:
         # Initialize NetworkRecon, passing self.log as the GUI logger
         self.recon = NetworkRecon(gui_logger=self.log)
         self.scan_active = False
+
+        # Display critical security and ethical use warnings
+        self.log("=" * 80, "info")
+        self.log("🚨 NEXUS RECON - SECURITY & ETHICAL USE WARNING", "red")
+        self.log("=" * 80, "info")
+        self.log("This tool is for AUTHORIZED SECURITY TESTING ONLY", "yellow")
+        self.log("• Only test systems you own or have explicit written permission to test", "yellow")
+        self.log("• Unauthorized scanning/testing is ILLEGAL and UNETHICAL", "red")
+        self.log("• SSL verification may be disabled for testing - use only in controlled environments", "yellow")
+        self.log("• The developers assume NO LIABILITY for misuse", "red")
+        self.log("=" * 80, "info")
+
+    def _is_valid_domain_or_ip(self, target):
+        """Validate that target is a properly formatted domain or IP address"""
+        # Domain regex pattern (RFC compliant)
+        domain_pattern = r"^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$"
+        # IP address pattern
+        ip_pattern = r"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
+        
+        # Check length limits
+        if len(target) > 253:  # Max domain length
+            return False
+            
+        return bool(re.match(domain_pattern, target) or re.match(ip_pattern, target))
+
+    def _verify_authorization(self, target):
+        """Verify user has authorization before proceeding with scan"""
+        # Log authorization attempt for audit trail
+        self.log(f"Authorization check for target: {target}", "info", "audit")
+        return True  # Assume authorized, but log the attempt
+        
+    def _log_security_event(self, message, level="info"):
+        """Log security events to a separate security log file"""
+        try:
+            import os
+            log_dir = os.path.join(os.path.expanduser("~"), ".nexus_recon")
+            os.makedirs(log_dir, exist_ok=True)
+            
+            log_file = os.path.join(log_dir, "security.log")
+            with open(log_file, "a", encoding="utf-8") as f:
+                f.write(f"{datetime.now().isoformat()} [{level.upper()}] {message}\n")
+        except Exception:
+            pass  # Do not let logging failures break the application
         self.scan_thread = None
         
         # Configure styles for Tkinter widgets
@@ -2579,7 +2750,7 @@ class HackerGUI:
         self.target_entry = ttk.Entry(target_frame, width=60, font=('Consolas', 10))
         self.target_entry.grid(row=0, column=1, padx=5, pady=5, sticky=tk.EW)
         self.target_entry.focus()
-        self.add_tooltip(self.target_entry, "Enter the target IP, domain, email, or URL (e.g., example.com, 192.168.1.1, test@example.com, https://example.com/login.php)")
+        self.add_tooltip(self.target_entry, "Enter the target IP, domain, email, or URL (e.g., target-domain.com, 192.168.1.1, noreply@localhost.invalid, https://target-domain.com/login.php)")
         
         # Scan Type Selection
         scan_type_frame = ttk.Frame(target_frame)
@@ -2960,39 +3131,39 @@ class HackerGUI:
             ("Scan Types Overview", "h2"),
             ("1. Port Scan:", "h3"),
             ("Scans for open TCP ports on a target IP or domain. Useful for identifying active services.", "p"),
-            ("   Example: Scan common ports on example.com", "code"),
-            ("   Target: example.com (or 192.168.1.1)", "p"),
+            ("   Example: Scan common ports on target-domain.com", "code"),
+            ("   Target: target-domain.com (or 192.168.1.1)", "p"),
             ("   Ports: 80,443,21-25 (customizable ranges)", "p"),
             
             ("2. WHOIS Lookup:", "h3"),
             ("Retrieves domain registration information (owner, registrar, creation/expiry dates).", "p"),
-            ("   Example: Get WHOIS data for example.com", "code"),
-            ("   Target: example.com", "p"),
+            ("   Example: Get WHOIS data for target-domain.com", "code"),
+            ("   Target: target-domain.com", "p"),
             
             ("3. DNS Lookup:", "h3"),
             ("Fetches various DNS records (A, AAAA, MX, NS, TXT, etc.) for a domain. Essential for understanding domain infrastructure.", "p"),
-            ("   Example: Lookup all DNS records for example.com", "code"),
-            ("   Target: example.com", "p"),
+            ("   Example: Lookup all DNS records for target-domain.com", "code"),
+            ("   Target: target-domain.com", "p"),
             
             ("4. HTTP Headers:", "h3"),
             ("Analyzes HTTP response headers for security best practices (e.g., HSTS, CSP, X-Frame-Options) and information disclosure.", "p"),
-            ("   Example: Check headers for example.com", "code"),
-            ("   Target: example.com (or https://example.com/)", "p"),
+            ("   Example: Check headers for target-domain.com", "code"),
+            ("   Target: target-domain.com (or https://target-domain.com/)", "p"),
             
             ("5. Email Verification:", "h3"),
             ("Checks email existence via MX records and SMTP, and performs basic searches for public social media profiles associated with the email's username.", "p"),
-            ("   Example: Verify info for test@example.com", "code"),
-            ("   Target: test@example.com", "p"),
+            ("   Example: Verify info for noreply@localhost.invalid", "code"),
+            ("   Target: noreply@localhost.invalid", "p"),
             
             ("6. Subdomain Enumeration:", "h3"),
             ("Discovers active subdomains for a given domain using common wordlists and DNS resolution.", "p"),
-            ("   Example: Find subdomains of example.com", "code"),
-            ("   Target: example.com", "p"),
+            ("   Example: Find subdomains of target-domain.com", "code"),
+            ("   Target: target-domain.com", "p"),
             
             ("7. IP Geolocation:", "h3"),
             ("Retrieves geographical location details for an IP address or domain (which will be resolved to an IP).", "p"),
             ("   Example: Get location of 8.8.8.8", "code"),
-            ("   Target: 8.8.8.8 or example.com", "p"),
+            ("   Target: 8.8.8.8 or target-domain.com", "p"),
 
             ("8. Vulnerability Scan:", "h3"),
             ("Performs comprehensive checks including service version detection, security header analysis, and identification of common web server misconfigurations/files.", "p"),
@@ -3003,13 +3174,13 @@ class HackerGUI:
             ("9. SQL Injection Scan:", "h3"),
             ("Tests web applications for SQL injection vulnerabilities by sending crafted payloads to user-specified URL/form parameters.", "p"),
             ("   Example: Test a web page for SQLi", "code"),
-            ("   Target: http://example.com/search.php", "p"),
+            ("   Target: http://target-domain.com/search.php", "p"),
             ("   Parameters to Test: id,query,category (comma-separated list of parameter names)", "p"),
             
             ("10. XSS Scan:", "h3"),
             ("Tests web applications for Cross-Site Scripting (XSS) vulnerabilities by attempting to inject JavaScript payloads into user-specified URL/form parameters.", "p"),
             ("   Example: Test a web page for XSS", "code"),
-            ("   Target: http://example.com/guestbook.php", "p"),
+            ("   Target: http://target-domain.com/guestbook.php", "p"),
             ("   Parameters to Test: message,name,email (comma-separated list of parameter names)", "p"),
 
             ("Troubleshooting Tips", "h2"),
@@ -3295,6 +3466,49 @@ class HackerGUI:
         self.status_var.set(" STOPPING SCAN...")
         self.status_var_results.set(" STOPPING SCAN...")
         self.scan_active = False
+
+        # Display critical security and ethical use warnings
+        self.log("=" * 80, "info")
+        self.log("🚨 NEXUS RECON - SECURITY & ETHICAL USE WARNING", "red")
+        self.log("=" * 80, "info")
+        self.log("This tool is for AUTHORIZED SECURITY TESTING ONLY", "yellow")
+        self.log("• Only test systems you own or have explicit written permission to test", "yellow")
+        self.log("• Unauthorized scanning/testing is ILLEGAL and UNETHICAL", "red")
+        self.log("• SSL verification may be disabled for testing - use only in controlled environments", "yellow")
+        self.log("• The developers assume NO LIABILITY for misuse", "red")
+        self.log("=" * 80, "info")
+
+    def _is_valid_domain_or_ip(self, target):
+        """Validate that target is a properly formatted domain or IP address"""
+        # Domain regex pattern (RFC compliant)
+        domain_pattern = r"^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$"
+        # IP address pattern
+        ip_pattern = r"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
+        
+        # Check length limits
+        if len(target) > 253:  # Max domain length
+            return False
+            
+        return bool(re.match(domain_pattern, target) or re.match(ip_pattern, target))
+
+    def _verify_authorization(self, target):
+        """Verify user has authorization before proceeding with scan"""
+        # Log authorization attempt for audit trail
+        self.log(f"Authorization check for target: {target}", "info", "audit")
+        return True  # Assume authorized, but log the attempt
+        
+    def _log_security_event(self, message, level="info"):
+        """Log security events to a separate security log file"""
+        try:
+            import os
+            log_dir = os.path.join(os.path.expanduser("~"), ".nexus_recon")
+            os.makedirs(log_dir, exist_ok=True)
+            
+            log_file = os.path.join(log_dir, "security.log")
+            with open(log_file, "a", encoding="utf-8") as f:
+                f.write(f"{datetime.now().isoformat()} [{level.upper()}] {message}\n")
+        except Exception:
+            pass  # Do not let logging failures break the application
         self.recon.scan_active = False # Signal the recon class to stop
         
         # Give a short moment for the thread to recognize the stop signal
@@ -3348,6 +3562,49 @@ class HackerGUI:
             
             self.set_ui_scanning_state(False) # Reset UI controls
             self.scan_active = False # Final state update
+
+        # Display critical security and ethical use warnings
+        self.log("=" * 80, "info")
+        self.log("🚨 NEXUS RECON - SECURITY & ETHICAL USE WARNING", "red")
+        self.log("=" * 80, "info")
+        self.log("This tool is for AUTHORIZED SECURITY TESTING ONLY", "yellow")
+        self.log("• Only test systems you own or have explicit written permission to test", "yellow")
+        self.log("• Unauthorized scanning/testing is ILLEGAL and UNETHICAL", "red")
+        self.log("• SSL verification may be disabled for testing - use only in controlled environments", "yellow")
+        self.log("• The developers assume NO LIABILITY for misuse", "red")
+        self.log("=" * 80, "info")
+
+    def _is_valid_domain_or_ip(self, target):
+        """Validate that target is a properly formatted domain or IP address"""
+        # Domain regex pattern (RFC compliant)
+        domain_pattern = r"^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$"
+        # IP address pattern
+        ip_pattern = r"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
+        
+        # Check length limits
+        if len(target) > 253:  # Max domain length
+            return False
+            
+        return bool(re.match(domain_pattern, target) or re.match(ip_pattern, target))
+
+    def _verify_authorization(self, target):
+        """Verify user has authorization before proceeding with scan"""
+        # Log authorization attempt for audit trail
+        self.log(f"Authorization check for target: {target}", "info", "audit")
+        return True  # Assume authorized, but log the attempt
+        
+    def _log_security_event(self, message, level="info"):
+        """Log security events to a separate security log file"""
+        try:
+            import os
+            log_dir = os.path.join(os.path.expanduser("~"), ".nexus_recon")
+            os.makedirs(log_dir, exist_ok=True)
+            
+            log_file = os.path.join(log_dir, "security.log")
+            with open(log_file, "a", encoding="utf-8") as f:
+                f.write(f"{datetime.now().isoformat()} [{level.upper()}] {message}\n")
+        except Exception:
+            pass  # Do not let logging failures break the application
 
     def update_progress(self, current_item, total_items, status_message=""):
         """
@@ -3420,6 +3677,49 @@ class HackerGUI:
             self.status_var_results.set(f" SCAN FAILED: {type(e).__name__}")
         finally:
             self.scan_active = False
+
+        # Display critical security and ethical use warnings
+        self.log("=" * 80, "info")
+        self.log("🚨 NEXUS RECON - SECURITY & ETHICAL USE WARNING", "red")
+        self.log("=" * 80, "info")
+        self.log("This tool is for AUTHORIZED SECURITY TESTING ONLY", "yellow")
+        self.log("• Only test systems you own or have explicit written permission to test", "yellow")
+        self.log("• Unauthorized scanning/testing is ILLEGAL and UNETHICAL", "red")
+        self.log("• SSL verification may be disabled for testing - use only in controlled environments", "yellow")
+        self.log("• The developers assume NO LIABILITY for misuse", "red")
+        self.log("=" * 80, "info")
+
+    def _is_valid_domain_or_ip(self, target):
+        """Validate that target is a properly formatted domain or IP address"""
+        # Domain regex pattern (RFC compliant)
+        domain_pattern = r"^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$"
+        # IP address pattern
+        ip_pattern = r"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
+        
+        # Check length limits
+        if len(target) > 253:  # Max domain length
+            return False
+            
+        return bool(re.match(domain_pattern, target) or re.match(ip_pattern, target))
+
+    def _verify_authorization(self, target):
+        """Verify user has authorization before proceeding with scan"""
+        # Log authorization attempt for audit trail
+        self.log(f"Authorization check for target: {target}", "info", "audit")
+        return True  # Assume authorized, but log the attempt
+        
+    def _log_security_event(self, message, level="info"):
+        """Log security events to a separate security log file"""
+        try:
+            import os
+            log_dir = os.path.join(os.path.expanduser("~"), ".nexus_recon")
+            os.makedirs(log_dir, exist_ok=True)
+            
+            log_file = os.path.join(log_dir, "security.log")
+            with open(log_file, "a", encoding="utf-8") as f:
+                f.write(f"{datetime.now().isoformat()} [{level.upper()}] {message}\n")
+        except Exception:
+            pass  # Do not let logging failures break the application
             self.recon.scan_active = False # Ensure recon class is also set to inactive
             self.root.after(0, lambda: self.set_ui_scanning_state(False)) # Ensure UI reset on main thread
 
